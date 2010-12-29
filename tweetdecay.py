@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # file name: ''tweetdecay.py''
 # project: Tweet Decay
-
+#
 # function: Automatically delete twitter tweets with a certain age
 #
 # last change: $LastChangedRevision$
@@ -42,12 +42,13 @@ perror = logging.error
 
 # *** Twitter messager class
 class tweetkiller:
-    """ TODO WRITE METwitter the given string to the embedded account details"""
+    """Delete tweets older than a certain time"""
 
     # Variables
     _api = ""
 
-    def __init__(self):     # C'tor
+    def __init__(self):
+        """C'tor: Create Twitter API object"""
         # Username/password: Consumer Data, not account
         # access_*: Fetch from tool python-twitter/get_access_token.py
         self._api = twitter.Api(username=tweetdecayopts.twitteraccount['consumer_key'],
@@ -67,10 +68,8 @@ class tweetkiller:
        print "\n".join(["   " + s.text + "\n      " + s.created_at + " " + str(s.id) \
                         for s in tweets])
 
-
-
-
-    def finish(self):      # Cleanup
+    def finish(self):
+        """Destructor - Cleanup"""
         self._api.ClearCredentials()
 
 
@@ -82,7 +81,7 @@ def main():
     # Variables
     # ...
 
-    # Command line parsing: QUIET option
+    # Command line parsing: QUIET option and Test Run
     cmd_usage="usage: %prog [options] args"
     cmd_desc ="""TODO WRITE ME"""
     cmd_version="%prog " + __version__

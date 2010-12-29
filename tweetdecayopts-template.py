@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # file name: ''tweetdecayopts.py''
 # project: Tweet Decay
-
+#
 # function: Options for tweetdecay.py
 #
 # last change: $LastChangedRevision$
