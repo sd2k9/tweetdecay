@@ -25,6 +25,10 @@ import logging
 import optparse
 # Twitter interface
 import twitter
+# Time manipulation
+import datetime
+import rfc822
+
 
 
 # *** Get the options
@@ -62,11 +66,33 @@ class tweetkiller:
     def decay(self, decaytime):
        """Remove tweets older than decaytime in days"""
        pinfo("Removing tweets older than " + str(decaytime) +" days")
-       pinfo("   Currently doing nothing, just listing all tweets as playground")
+
+       # Create date time object, substracted the keeping time so we can use it
+       # to decide which tweet to remove
+       tdecay = datetime.datetime.now() - \
+               datetime.timedelta(tweetdecayopts.opts['decaytime'])
+       pinfo("   Will remove all tweets before " + tdecay.strftime("%Y-%m-%d") + \
+                 " (older than "+ str(tweetdecayopts.opts['decaytime']) + " days)")
+
        # Get all tweets
        tweets = self._api.GetUserTimeline()
+
+       # Debug: Print all tweets
        print "\n".join(["   " + s.text + "\n      " + s.created_at + " " + str(s.id) \
                         for s in tweets])
+
+       # Decide which tweets will be removed
+       for it in tweets:
+           # Template for time: Fri Dec 17 09:09:10 +0000 2010
+           if datetime.datetime(*(rfc822.parsedate(it.created_at))[0:6]) < tdecay:
+               self._remove_tweet(it)
+
+    def _remove_tweet(self, tweet):
+       """Remove this tweet (private function)"""
+       pinfo("   Remove: "+ tweet.text + "\n         " + tweet.created_at + " " + str(tweet.id))
+
+       # TODO: need to work on here
+
 
     def finish(self):
         """Destructor - Cleanup"""

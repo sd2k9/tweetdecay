@@ -11,3 +11,5 @@ Configuration
 
 - Copy the file tweetdecayopts-template.py to tweetdecayopts.py
 - Adapt the settings in tweetdecayopts.py
+- Hide from other users with the command
+  chmod og-rw tweetdecayopts.py
