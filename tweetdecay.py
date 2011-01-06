@@ -89,7 +89,14 @@ class tweetkiller:
 
     def _remove_tweet(self, tweet):
        """Remove this tweet (private function)"""
-       pinfo("   Remove: "+ tweet.text + "\n         " + tweet.created_at + " " + str(tweet.id))
+       # Signal testmode also in message
+       if tweetdecayopts.opts['testmode']:
+           testmode = " (not performed in testmode)"
+       else:
+           testmode = ""
+
+       # Show work to be done
+       pinfo("   Remove: "+ tweet.text + testmode + "\n         " + tweet.created_at + " " + str(tweet.id))
 
        # TODO: need to work on here
 
@@ -124,6 +131,11 @@ def main():
     # Setup logging: Show only from warnings when being QUIET
     logging.basicConfig(level=logging.WARNING if cmd_opts.quiet else logging.INFO,
                     format="%(message)s")
+
+    # Report Testing mode if set
+    tweetdecayopts.opts['testmode'] = cmd_opts.test # Make available for everyone
+    if cmd_opts.test:
+        pinfo("Test mode selected, deletion will NOT be performed")
 
     # Abort when different than no argument
     if len(cmd_args) != 0:

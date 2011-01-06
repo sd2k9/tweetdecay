@@ -41,4 +41,8 @@ twitteraccount = {
 # *** Global settings
 opts = { # Decay time in days: Remove tweets older than this
          'decaytime': 10,
+         #
+         # The following settings are used internally, so
+         # you cannot change them here. They are only listed for convenience.
+         # testmode - Test Mode / Dry Run
        }
