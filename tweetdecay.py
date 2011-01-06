@@ -15,7 +15,7 @@
 
 # *** Import modules
 # Regular Expression Service
-# import re
+import re
 # Time conversion
 # from datetime import datetime
 # To control output level easily
@@ -81,10 +81,19 @@ class tweetkiller:
        print "\n".join(["   " + s.text + "\n      " + s.created_at + " " + str(s.id) \
                         for s in tweets])
 
+       # RE object for plixi link detection
+       # Template: eted http://plixi.com/p/64347208 (not per
+       re_plixi = re.compile("\s*http://plixi.com/p/(\d+)\s*")
+
        # Decide which tweets will be removed
        for it in tweets:
            # Template for time: Fri Dec 17 09:09:10 +0000 2010
            if datetime.datetime(*(rfc822.parsedate(it.created_at))[0:6]) < tdecay:
+               # For plixi-Link try also to remove the picture
+               re_match = re_plixi.search(it.text)
+               if re_match is not None:
+                   self._remove_plixi(re_match.group(1))
+               # Do the actual removal of the tweet
                self._remove_tweet(it)
 
     def _remove_tweet(self, tweet):
@@ -96,9 +105,28 @@ class tweetkiller:
            testmode = ""
 
        # Show work to be done
-       pinfo("   Remove: "+ tweet.text + testmode + "\n         " + tweet.created_at + " " + str(tweet.id))
+       pinfo("   Remove Tweet: "+ tweet.text + testmode + "\n         " + tweet.created_at + " " + str(tweet.id))
 
-       # TODO: need to work on here
+       # Remove, when not testmode
+       if not tweetdecayopts.opts['testmode']:
+           pass
+           # DEBUG TO AVOID ACCIDENTAL DELETE self._api.DestroyStatus(tweet.id)
+
+    def _remove_plixi(self, pid):
+       """Remove this plixi ID picture (private function)"""
+
+       # Signal testmode also in message
+       if tweetdecayopts.opts['testmode']:
+           testmode = " (not performed in testmode)"
+       else:
+           testmode = ""
+
+       # Show work to be done
+       pinfo("   Remove Plixi Image: "+ pid + testmode)
+
+       # Remove, when not testmode
+       if not tweetdecayopts.opts['testmode']:
+           pass    # not implemented yet
 
 
     def finish(self):
