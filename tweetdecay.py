@@ -28,6 +28,8 @@ import twitter
 # Time manipulation
 import datetime
 import rfc822
+# Bitly API
+import bitly
 
 
 
@@ -55,8 +57,8 @@ class tweetkiller:
         """C'tor: Create Twitter API object"""
         # Username/password: Consumer Data, not account
         # access_*: Fetch from tool python-twitter/get_access_token.py
-        self._api = twitter.Api(username=tweetdecayopts.twitteraccount['consumer_key'],
-                      password=tweetdecayopts.twitteraccount['consumer_secret'],
+        self._api = twitter.Api(consumer_key=tweetdecayopts.twitteraccount['consumer_key'],
+                      consumer_secret=tweetdecayopts.twitteraccount['consumer_secret'],
                       access_token_key=tweetdecayopts.twitteraccount['access_token_key'],
                       access_token_secret=tweetdecayopts.twitteraccount['access_token_secret']
                                 )
@@ -75,7 +77,7 @@ class tweetkiller:
                  " (older than "+ str(tweetdecayopts.opts['decaytime']) + " days)")
 
        # Get all tweets
-       tweets = self._api.GetUserTimeline()
+       tweets = self._api.GetUserTimeline(count=200)
 
        # Debug: Print all tweets
        print "\n".join(["   " + s.text + "\n      " + s.created_at + " " + str(s.id) \
@@ -84,6 +86,9 @@ class tweetkiller:
        # RE object for plixi link detection
        # Template: eted http://plixi.com/p/64347208 (not per
        re_plixi = re.compile("\s*http://plixi.com/p/(\d+)\s*")
+       # RE object for other link detection (usually after URL shortener)
+       # Template: eted http://something else but not plixi
+       re_link = re.compile("[\s^]\s*(http://[^(plixi.com)/]+/([\w\d/]+))\s*[\s$]")
 
        # Decide which tweets will be removed
        for it in tweets:
@@ -93,6 +98,10 @@ class tweetkiller:
                re_match = re_plixi.search(it.text)
                if re_match is not None:
                    self._remove_plixi(re_match.group(1))
+               # For other link process this further
+               re_match = re_link.search(it.text)
+               if re_match is not None:
+                   self._remove_link(re_match.group(1))
                # Do the actual removal of the tweet
                self._remove_tweet(it)
 
@@ -109,8 +118,9 @@ class tweetkiller:
 
        # Remove, when not testmode
        if not tweetdecayopts.opts['testmode']:
-           pass
-           # DEBUG TO AVOID ACCIDENTAL DELETE self._api.DestroyStatus(tweet.id)
+           # DEBUG TO AVOID ACCIDENTAL DELETE
+           # pass
+           self._api.DestroyStatus(tweet.id)
 
     def _remove_plixi(self, pid):
        """Remove this plixi ID picture (private function)"""
@@ -126,7 +136,68 @@ class tweetkiller:
 
        # Remove, when not testmode
        if not tweetdecayopts.opts['testmode']:
+           perror("NOT IMPLEMENTED YET (and won't happen)")
            pass    # not implemented yet
+
+    def _remove_link(self, link):
+       """Remove this link (private function)
+
+       Does link expansion and hands over to correct removal function.
+       """
+
+       # Signal testmode also in message
+       if tweetdecayopts.opts['testmode']:
+           testmode = " (not performed in testmode)"
+       else:
+           testmode = ""
+
+       # Show work to be done
+       pinfo("   Check for link removal: "+ link + testmode)
+
+       # First check, are we behind any known URL shortener?
+       # Currently we only know bit.ly
+       if re.search(link, "^http://bit.ly/\w+$"):
+           # Yes, bitly expansion needed
+           # bitly sign in - von tweetfile klauen!
+           link =bitly.expand(link)
+           pinfo("   Expanded URL via bit.ly: "+ link + testmode)
+
+       # Then check that we're a tweetfile link
+       if tweetdecayopts.tweetfile.enable is True:
+           if re.search(link, "^" + tweetdecayopts.tweetfile['linkbase'] + "/?([^/].*)$"):
+               # Yes, again hand over work
+               self._remove_link_tweetfile(re.match(1), testmode)
+
+
+    def _remove_link_tweetfile(self, link, testmode):
+       """Remove this link created by tweetfile (private function)
+
+       1.P: tweetfile link, linkbase removed
+       2.P: String to expand on outputs to signal testmode when enabled
+       """
+
+       # Show work to be done
+       pinfo("   Detected tweetfile link to remove: "+ link + "(base stripped)" + testmode)
+
+       # Remove, when not testmode
+       if tweetdecayopts.opts['testmode']:
+           cmd = ["ssh", tweetdecayopts.tweetfile['ssh_account'], "rm", \
+                      tweetdecayopts.tweetfile['filebase'] + link ]
+           pinfo("   Executing " + cmd + "...")
+           try:
+               retcode = subprocess.call(cmd, shell=False)
+               if retcode < 0:
+                   print "cmd was terminated by signal" + str(-retcode)
+               elif retcode > 0:
+                   print "cmd returned error code " + str(retcode)
+           except OSError, e:
+               print "cmd execution failed: " + str(e)
+               raise
+           except:
+               raise   # Other errors are passed further
+
+       # Done
+       return
 
 
     def finish(self):

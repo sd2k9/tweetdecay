@@ -45,4 +45,18 @@ opts = { # Decay time in days: Remove tweets older than this
          # The following settings are used internally, so
          # you cannot change them here. They are only listed for convenience.
          # testmode - Test Mode / Dry Run
+         # 'testmode': True,
        }
+
+# *** Settings for tweetfile link removal
+tweetfile = {
+        # Enable or Disable tweetfile link removal
+        # 'enable': True,
+        'enable': False,
+        # Url base of tweetfile, take from tweetfileaccess.py entry "fileurlbase"
+        'linkbase': 'http://server.org/tweetfile/myuser',
+        # The ssh account you use with ssh to access your server
+        'sshaccount': 'tweeter@server.org',
+        # Directory where the tweetfiles are to be found on the remote server
+        'filebase': '/srv/www/vhost/vhost5/tweetfile/myuser',
+    }
