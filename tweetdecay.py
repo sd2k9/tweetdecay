@@ -30,7 +30,8 @@ import datetime
 import rfc822
 # Bitly API
 import bitly
-
+# Required to resolve t.co links
+import urllib2
 
 
 # *** Get the options
@@ -85,10 +86,10 @@ class tweetkiller:
 
        # RE object for plixi link detection
        # Template: eted http://plixi.com/p/64347208 (not per
-       re_plixi = re.compile("\s*http://plixi.com/p/(\d+)\s*")
+       re_plixi = re.compile("(?:[^\s]\s+)?http://plixi.com/p/(\d+)\s*")
        # RE object for other link detection (usually after URL shortener)
        # Template: eted http://something else but not plixi
-       re_link = re.compile("[\s^]\s*(http://[^(plixi.com)/]+/([\w\d/]+))\s*[\s$]")
+       re_link = re.compile("(?:[^\s]\s+)?(http://[\w\d\./]+)[\s+.*]?$")
 
        # Decide which tweets will be removed
        for it in tweets:
@@ -98,10 +99,11 @@ class tweetkiller:
                re_match = re_plixi.search(it.text)
                if re_match is not None:
                    self._remove_plixi(re_match.group(1))
-               # For other link process this further
-               re_match = re_link.search(it.text)
-               if re_match is not None:
-                   self._remove_link(re_match.group(1))
+               else:
+                   # For other link process this further
+                   re_match = re_link.search(it.text)
+                   if re_match is not None:
+                       self._remove_link(re_match.group(1))
                # Do the actual removal of the tweet
                self._remove_tweet(it)
 
@@ -156,18 +158,27 @@ class tweetkiller:
 
        # First check, are we behind any known URL shortener?
        # Currently we only know bit.ly
-       if re.search(link, "^http://bit.ly/\w+$"):
+       if tweetdecayopts.urlshorten['bitly']['enable'] is True and \
+          re.search("^http://bit.ly/\w+$", link):
            # Yes, bitly expansion needed
-           # bitly sign in - von tweetfile klauen!
-           link =bitly.expand(link)
+           bitlyworker=bitly.Api(login= tweetdecayopts.urlshorten['bitly']['api_user'], apikey= tweetdecayopts.urlshorten['bitly']['api_key'])
+           link = bitlyworker.expand(link)
            pinfo("   Expanded URL via bit.ly: "+ link + testmode)
 
-       # Then check that we're a tweetfile link
-       if tweetdecayopts.tweetfile.enable is True:
-           if re.search(link, "^" + tweetdecayopts.tweetfile['linkbase'] + "/?([^/].*)$"):
-               # Yes, again hand over work
-               self._remove_link_tweetfile(re.match(1), testmode)
+       # And also t.co links - soon
+       
+       # Thanks goes to: http://stackoverflow.com/questions/8872232/unwrap-t-co-links-with-python
+       # req = urllib2.urlopen(tco_url)
+       # print req.url
 
+       # Then check that we're a tweetfile link
+       if tweetdecayopts.tweetfile['enable'] is True:
+           lmatch = re.search("^" + tweetdecayopts.tweetfile['linkbase'] + "/?([^/].*)$", link)
+           if lmatch is not None:
+               # Yes, again hand over work
+               self._remove_link_tweetfile(lmatch.group(1), testmode)
+           else:
+               pinfo("      No tweetfile link - ignoring")
 
     def _remove_link_tweetfile(self, link, testmode):
        """Remove this link created by tweetfile (private function)
@@ -177,10 +188,10 @@ class tweetkiller:
        """
 
        # Show work to be done
-       pinfo("   Detected tweetfile link to remove: "+ link + "(base stripped)" + testmode)
+       pinfo("   Detected tweetfile link to remove: "+ link + " (base stripped)" + testmode)
 
        # Remove, when not testmode
-       if tweetdecayopts.opts['testmode']:
+       if not tweetdecayopts.opts['testmode']:
            cmd = ["ssh", tweetdecayopts.tweetfile['ssh_account'], "rm", \
                       tweetdecayopts.tweetfile['filebase'] + link ]
            pinfo("   Executing " + cmd + "...")

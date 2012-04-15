@@ -4,7 +4,7 @@ Ongoing development - currently not usable at all
 Goals
 - Having an tool which automatically deletes twitter tweets of a certain age
   (who is interested in old stuff anyway? Its just polluting the infophere)
-- In the course of deleting tweets also remove associated pixli images
+- In the course of deleting tweets also remove associated tweetfile images
 
 Configuration
 *************

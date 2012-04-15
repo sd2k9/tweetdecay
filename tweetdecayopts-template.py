@@ -60,3 +60,16 @@ tweetfile = {
         # Directory where the tweetfiles are to be found on the remote server
         'filebase': '/srv/www/vhost/vhost5/tweetfile/myuser',
     }
+
+# *** Settings for URL shorteners
+urlshorten = {
+   'bitly': {     # Bitly URL Shortener's API required login
+        # You can get it from here: https://bit.ly/a/your_api_key
+        # Enable or Disable bitly link resolution
+        # 'enable': True,
+        'enable': False,
+        #  bit.ly URL shortener user name and API key
+        'api_user' : None,
+        'api_key' : None,
+    }
+}
