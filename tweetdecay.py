@@ -32,6 +32,8 @@ import rfc822
 import bitly
 # Required to resolve t.co links
 import urllib2
+# exit et al
+import sys
 
 
 # *** Get the options
@@ -265,9 +267,8 @@ def main():
 
 
 # *** Call Main program
-__version__ = filter(str.isdigit, "$LastChangedRevision$")
+__version__ = ''.join(filter(str.isdigit, "$LastChangedRevision$"))
 if __version__ == "":
-    __version__ = "(development version)"
+   __version__ = "(development version)"
 if __name__ == "__main__":
-    main()
-
+    sys.exit(main())
