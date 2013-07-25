@@ -13,3 +13,15 @@ Configuration
 - Adapt the settings in tweetdecayopts.py
 - Hide from other users with the command
   chmod og-rw tweetdecayopts.py
+
+License & Author
+****************
+GNU General Public License, version 2
+Copyright (C) 2010 Robert Lange <robert.lange@s1999.tu-chemnitz.de>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+version 2 as published by the Free Software Foundation.
+
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+
